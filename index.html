@@ -2,179 +2,59 @@
 <html>
 	<head>
 		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-		<script src="https://unpkg.com/vue@2.4.4/dist/vue.min.js"></script>
+		<link type="text/css" rel="stylesheet" href="https://unpkg.com/bootstrap/dist/css/bootstrap.min.css" />
+		<link type="text/css" rel="stylesheet" href="https://unpkg.com/bootstrap-vue@latest/dist/bootstrap-vue.min.css" />
+		<link type="text/css" rel="stylesheet" href="/css/main.css" />
 
-		<style>
-			html {
-				font-family: sans-serif;
-			}
-
-			pre {
-				margin: 0;
-			}
-
-			#settings td {
-				padding: 3px;
-			}
-
-			.settings-input {
-				text-align: right;
-				width: 50px;
-			}
-
-			.spacer {
-				padding-top: 10px;
-			}
-
-			.load-demo-container {
-				display: inline-block;
-			}
-
-			.load-demo-progress {
-				background-color: pink;
-			}
-
-			.load-demo-progress.complete {
-				background-color: lightgreen;
-			}
-		</style>
+		<script src="https://unpkg.com/vue@2.6.10/dist/vue.min.js"></script>
+		<script src="https://unpkg.com/bootstrap-vue@latest/dist/bootstrap-vue.min.js"></script>
+		<script src="/js/main.js" defer></script>
 	</head>
 
 	<body>
 		<div id="main">
-			<div id="settings">
-				<table>
-					<tr>
-						<td>
-							<strong>Image size:</strong>
-						</td>
-						<td>
-							<input class="settings-input" type="number" v-model="img_size" :disabled="download_interval !== null"/> MB
-						</td>
-					</tr>
-					<tr>
-						<td>
-							<strong>Update intervals:</strong>
-						</td>
-						<td>
-							<input class="settings-input" type="number" v-model="intervals_per_second" :disabled="download_interval !== null"/> /s
-						</td>
-					</tr>
-				</table>
-			</div>
+			<b-navbar toggleable="lg" type="dark" variant="dark">
+				<b-navbar-brand href="https://github.com/bryonf/internet-speed-simulator">GitHub/bryonf</b-navbar-brand>
+			</b-navbar>
 
-			<div class="spacer"></div>
+			<b-container class="mt-5">
+				<b-container id="settings" fluid>
+					<b-row>
+						<b-col md="3">
+							<b-form v-on:submit.prevent="toggleRun()">
+								<b-form-group id="input-group-1" label="Image size (in MBs):" label-for="input-1">
+									<b-form-input id="input-1" type="number" v-model="img_size" :disabled="download_interval !== null" :required="true"></b-form-input>
+								</b-form-group>
 
-			<div v-for="demo in demos" class="load-demo-container" :style="{'height': img_height + 'px'}">
-				<div :class="{'load-demo-progress': true, 'complete': getProgress(demo) == 1}" :style="{'height': getProgressHeight(demo) + 'px', 'width': img_width + 'px'}">
-<pre>
-Rate: {{demo.speed}} Mbps
-Time: {{getSecondsElapsed(demo)}}s
-</pre>
-				</div>
-			</div>
+								<b-form-group id="input-group-2" label="Update intervals (per second):" label-for="input-2">
+									<b-form-input id="input-2" type="number" v-model="intervals_per_second" :disabled="download_interval !== null" :required="true"></b-form-input>
+								</b-form-group>
 
-			<div class="spacer"></div>
+								<div class="mt-4">
+									<b-button v-if="download_interval === null" type="submit" variant="primary">Start</b-button>
+									<b-button v-else type="submit">Stop</b-button>
+								</div>
+							</b-form>
+						</b-col>
+					</b-row>
+				</b-container>
 
-			<div>
-				<input type="button" :value="download_interval === null ? 'Start' : 'Stop'" v-on:click="download_interval === null ? start() : stop()"/>
-			</div>
+				<b-container class="mt-5" fluid>
+					<b-card-group columns>
+						<b-card v-for="demo in demos" class="mb-1" sm="6" md="4" lg="2">
+							<div class="load-demo-container">
+								<div class="load-demo-text">
+									<div>Rate: {{demo.speed}} Mbps</div>
+									<div>Time: {{getSecondsElapsed(demo)}}s</div>
+								</div>
+								<div :class="{'load-demo-progress': true, 'complete': getProgress(demo) == 1}" :style="{'height': getProgressHeight(demo) + '%', 'width': '100%'}"></div>
+							</div>
+						</b-card>
+					</b-card-group>
+				</b-container>
+			</b-container>
 		</div>
 	</body>
-
-	<script>
-		var vue_vm = new Vue({
-			el: '#main',
-			data: {
-				// Simulated size of the image in MB.
-				img_size: 1,
-
-				// Simulated image dimensions in pixels.
-				img_height: 50,
-				img_width: 50,
-
-				// Each demo to display, using a defined speed in Mbps.
-				demos: [
-					{speed: 0.2,  current: 0, time: 0},
-					{speed: 0.5,  current: 0, time: 0},
-					{speed: 1,    current: 0, time: 0},
-					{speed: 1.5,  current: 0, time: 0},
-					{speed: 2,    current: 0, time: 0},
-					{speed: 2.5,  current: 0, time: 0},
-					{speed: 5,    current: 0, time: 0},
-					{speed: 10,   current: 0, time: 0},
-					{speed: 25,   current: 0, time: 0},
-					{speed: 50,   current: 0, time: 0},
-					{speed: 100,  current: 0, time: 0},
-					{speed: 1000, current: 0, time: 0}
-				],
-
-				// Return value of setInterval() call.
-				download_interval: null,
-
-				// How many intervals to run in a second.
-				intervals_per_second: 30,
-
-				// Just to avoid magic numbers.
-				ms_per_second: 1000
-			},
-			mounted: function() {
-				this.img_width = this.$el.offsetWidth / this.demos.length;
-			},
-			methods: {
-				addDownloadProgress: function() {
-					this.demos.forEach((demo) => {
-						if(demo.current == this.bytesToBits(this.img_size)) {
-							return;
-						}
-
-						demo.current = Math.min(demo.current + (demo.speed / this.intervals_per_second), this.bytesToBits(this.img_size));
-						demo.time += this.ms_per_second / this.intervals_per_second;
-					});
-				},
-				allDemosFinished: function() {
-					return this.demos.filter((demo) => {
-						return demo.current < this.bytesToBits(this.img_size);
-					}).length === 0;
-				},
-				bytesToBits: function(bytes) {
-					return bytes * 8;
-				},
-				getProgress: function(demo) {
-					return demo.current / this.bytesToBits(this.img_size);
-				},
-				getProgressHeight: function(demo) {
-					return this.getProgress(demo) * this.img_height;
-				},
-				getSecondsElapsed: function(demo) {
-					return (demo.time / this.ms_per_second).toFixed(2);
-				},
-				initAll: function() {
-					// Revert the simulated download progress for each demo back to 0.
-					this.demos.forEach(function(demo) {
-						demo.current = 0;
-						demo.time = 0;
-					});
-				},
-				intervalHandler: function() {
-					this.addDownloadProgress();
-					if(this.allDemosFinished()) {
-						this.stop();
-					}
-				},
-				start: function() {
-					// Begin the download speed simulation.
-					this.initAll();
-					this.download_interval = setInterval(() => {
-						this.intervalHandler();
-					}, this.ms_per_second / this.intervals_per_second);
-				},
-				stop: function() {
-					clearInterval(this.download_interval);
-					this.download_interval = null;
-				}
-			}
-		});
-	</script>
 </html>
