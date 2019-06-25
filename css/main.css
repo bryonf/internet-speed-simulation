@@ -3,10 +3,8 @@ html {
 }
 
 .load-demo-container {
-	display: inline-block;
 	position: relative;
 	width: 100%;
-	padding: 10px;
 }
 
 .load-demo-progress {
@@ -26,4 +24,5 @@ html {
 	font-family: monospace;
 	position: relative;
 	z-index: 2;
+	white-space: nowrap;
 }

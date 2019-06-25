@@ -62,17 +62,23 @@
 				</b-container>
 
 				<b-container class="mt-5" fluid>
-					<b-card-group columns>
-						<b-card v-for="demo in demos" class="mb-1" sm="6" md="4" lg="2">
-							<div class="load-demo-container">
-								<div class="load-demo-text">
-									<div>Rate: {{demo.speed}} Mbps</div>
-									<div>Time: {{getSecondsElapsed(demo)}}s</div>
+					<b-row>
+						<b-col v-for="demo in demos" class="mb-2" sm="12" md="6" lg="4" xl="3">
+							<div class="card p-3">
+								<div class="load-demo-container p-3">
+									<div class="load-demo-text">
+										<div>Download: {{demo.speed}} Mbps</div>
+										<div>Progress: {{(getProgress(demo) * 100).toFixed(2)}}%</div>
+										<div>Elapsed:&nbsp; {{getSecondsElapsed(demo)}}s</div>
+									</div>
+									<div
+										:class="{'load-demo-progress': true, 'complete': getProgress(demo) == 1, 'rounded-sm': true}"
+										:style="{'height': getProgressHeight(demo) + '%', 'width': '100%'}"
+									></div>
 								</div>
-								<div :class="{'load-demo-progress': true, 'complete': getProgress(demo) == 1}" :style="{'height': getProgressHeight(demo) + '%', 'width': '100%'}"></div>
 							</div>
-						</b-card>
-					</b-card-group>
+						</b-col>
+					</b-row>
 				</b-container>
 			</b-container>
 		</div>
