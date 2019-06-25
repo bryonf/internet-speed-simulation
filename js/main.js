@@ -57,6 +57,13 @@ var vue_vm = new Vue({
 		bytesToBits: function(bytes) {
 			return bytes * 8;
 		},
+		clampValue: function(value, event) {
+			return Math.max(parseInt(event.target.min), Math.min(parseInt(event.target.max), value)) + '';
+		},
+		ensureNonZero: function(value, event) {
+			let clamped = Math.max(parseFloat(value), 0);
+			return (clamped === 0 ? 1 : clamped) + '';
+		},
 		getProgress: function(demo) {
 			return demo.current / this.bytesToBits(this.img_size);
 		},

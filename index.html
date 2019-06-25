@@ -25,11 +25,31 @@
 						<b-col md="3">
 							<b-form v-on:submit.prevent="toggleRun()">
 								<b-form-group id="input-group-1" label="Image size (in MBs):" label-for="input-1">
-									<b-form-input id="input-1" type="number" v-model="img_size" :disabled="download_interval !== null" :required="true"></b-form-input>
+									<b-form-input
+										id="input-1"
+										:number="true"
+										:formatter="ensureNonZero"
+										lazy-formatter
+										v-model="img_size"
+										:disabled="download_interval !== null"
+										:required="true"
+										v-on:focus="initAll"
+									></b-form-input>
 								</b-form-group>
 
 								<b-form-group id="input-group-2" label="Update intervals (per second):" label-for="input-2">
-									<b-form-input id="input-2" type="number" v-model="intervals_per_second" :disabled="download_interval !== null" :required="true"></b-form-input>
+									<b-form-input
+										id="input-2"
+										type="number"
+										min="1"
+										max="100"
+										:formatter="clampValue"
+										lazy-formatter
+										v-model="intervals_per_second"
+										:disabled="download_interval !== null"
+										:required="true"
+										v-on:focus="initAll"
+									></b-form-input>
 								</b-form-group>
 
 								<div class="mt-4">
