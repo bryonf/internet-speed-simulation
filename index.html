@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+
+		<script src="https://unpkg.com/vue@2.4.4/dist/vue.min.js"></script>
+
+		<style>
+			html {
+				font-family: sans-serif;
+			}
+
+			pre {
+				margin: 0;
+			}
+
+			#settings td {
+				padding: 3px;
+			}
+
+			.settings-input {
+				text-align: right;
+				width: 50px;
+			}
+
+			.spacer {
+				padding-top: 10px;
+			}
+
+			.load-demo-container {
+				display: inline-block;
+			}
+
+			.load-demo-progress {
+				background-color: pink;
+			}
+
+			.load-demo-progress.complete {
+				background-color: lightgreen;
+			}
+		</style>
+	</head>
+
+	<body>
+		<div id="main">
+			<div id="settings">
+				<table>
+					<tr>
+						<td>
+							<strong>Image size:</strong>
+						</td>
+						<td>
+							<input class="settings-input" type="number" v-model="img_size" :disabled="download_interval !== null"/> MB
+						</td>
+					</tr>
+					<tr>
+						<td>
+							<strong>Update intervals:</strong>
+						</td>
+						<td>
+							<input class="settings-input" type="number" v-model="intervals_per_second" :disabled="download_interval !== null"/> /s
+						</td>
+					</tr>
+				</table>
+			</div>
+
+			<div class="spacer"></div>
+
+			<div v-for="demo in demos" class="load-demo-container" :style="{'height': img_height + 'px'}">
+				<div :class="{'load-demo-progress': true, 'complete': getProgress(demo) == 1}" :style="{'height': getProgressHeight(demo) + 'px', 'width': img_width + 'px'}">
+<pre>
+Rate: {{demo.speed}} Mbps
+Time: {{getSecondsElapsed(demo)}}s
+</pre>
+				</div>
+			</div>
+
+			<div class="spacer"></div>
+
+			<div>
+				<input type="button" :value="download_interval === null ? 'Start' : 'Stop'" v-on:click="download_interval === null ? start() : stop()"/>
+			</div>
+		</div>
+	</body>
+
+	<script>
+		var vue_vm = new Vue({
+			el: '#main',
+			data: {
+				// Simulated size of the image in MB.
+				img_size: 1,
+
+				// Simulated image dimensions in pixels.
+				img_height: 50,
+				img_width: 50,
+
+				// Each demo to display, using a defined speed in Mbps.
+				demos: [
+					{speed: 0.2,  current: 0, time: 0},
+					{speed: 0.5,  current: 0, time: 0},
+					{speed: 1,    current: 0, time: 0},
+					{speed: 1.5,  current: 0, time: 0},
+					{speed: 2,    current: 0, time: 0},
+					{speed: 2.5,  current: 0, time: 0},
+					{speed: 5,    current: 0, time: 0},
+					{speed: 10,   current: 0, time: 0},
+					{speed: 25,   current: 0, time: 0},
+					{speed: 50,   current: 0, time: 0},
+					{speed: 100,  current: 0, time: 0},
+					{speed: 1000, current: 0, time: 0}
+				],
+
+				// Return value of setInterval() call.
+				download_interval: null,
+
+				// How many intervals to run in a second.
+				intervals_per_second: 30,
+
+				// Just to avoid magic numbers.
+				ms_per_second: 1000
+			},
+			mounted: function() {
+				this.img_width = this.$el.offsetWidth / this.demos.length;
+			},
+			methods: {
+				addDownloadProgress: function() {
+					this.demos.forEach((demo) => {
+						if(demo.current == this.bytesToBits(this.img_size)) {
+							return;
+						}
+
+						demo.current = Math.min(demo.current + (demo.speed / this.intervals_per_second), this.bytesToBits(this.img_size));
+						demo.time += this.ms_per_second / this.intervals_per_second;
+					});
+				},
+				allDemosFinished: function() {
+					return this.demos.filter((demo) => {
+						return demo.current < this.bytesToBits(this.img_size);
+					}).length === 0;
+				},
+				bytesToBits: function(bytes) {
+					return bytes * 8;
+				},
+				getProgress: function(demo) {
+					return demo.current / this.bytesToBits(this.img_size);
+				},
+				getProgressHeight: function(demo) {
+					return this.getProgress(demo) * this.img_height;
+				},
+				getSecondsElapsed: function(demo) {
+					return (demo.time / this.ms_per_second).toFixed(2);
+				},
+				initAll: function() {
+					// Revert the simulated download progress for each demo back to 0.
+					this.demos.forEach(function(demo) {
+						demo.current = 0;
+						demo.time = 0;
+					});
+				},
+				intervalHandler: function() {
+					this.addDownloadProgress();
+					if(this.allDemosFinished()) {
+						this.stop();
+					}
+				},
+				start: function() {
+					// Begin the download speed simulation.
+					this.initAll();
+					this.download_interval = setInterval(() => {
+						this.intervalHandler();
+					}, this.ms_per_second / this.intervals_per_second);
+				},
+				stop: function() {
+					clearInterval(this.download_interval);
+					this.download_interval = null;
+				}
+			}
+		});
+	</script>
+</html>
